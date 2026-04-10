@@ -1,0 +1,423 @@
+---
+import "../styles/global.css";
+import wordData from "../data/word-data.json";
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ワドえら</title>
+    <meta
+      name="description"
+      content="モノサシ(お題)を基準にワードを選ぶ!モノサシとたねワードを表示するパーティ用Webアプリ"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Monomaniac+One&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .logo-main {
+        font-family: "Monomaniac One", sans-serif;
+        font-size: 5rem;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+        text-shadow: 4px 4px 0px #0b67fc;
+      }
+      .logo-sub {
+        font-size: 1.25rem;
+        color: #e5f0fc;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        margin-top: -0.5rem;
+        opacity: 0.9;
+        font-family: "Monomaniac One", sans-serif;
+      }
+      /* Ensure modal content fits and scrolls nicely */
+      .modal-container {
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen bg-slate-100 text-slate-800 font-sans flex items-center justify-center p-4"
+  >
+    <!-- Floating Navigation -->
+    <div class="fixed top-4 right-4 flex gap-3 z-40">
+      <button
+        id="rules-btn"
+        class="w-12 h-12 bg-white rounded-full shadow-md hover:bg-slate-50 active:scale-95 transition-transform flex items-center justify-center font-bold text-blue-600 text-xl border border-slate-200"
+        >?</button
+      >
+    </div>
+
+    <!-- Main Container -->
+    <main
+      class="w-full max-w-sm bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200"
+    >
+      <!-- Logo Header -->
+      <header
+        class="bg-blue-900 text-center pb-2 px-4 flex flex-col items-center"
+      >
+        <div class="flex flex-col items-end">
+          <h1 class="logo-main" style="line-height: 1.2; margin-bottom: 0;">
+            ワド⚖えら
+          </h1>
+          <span
+            class="text-[10px] text-blue-200 font-mono opacity-60 tracking-[0.1em] -mt-2 mb-1 pr-1"
+          >
+            ©nanatengo
+          </span>
+        </div>
+        <p class="logo-sub">〜モノサシをもとにワードをえらぶ〜</p>
+      </header>
+
+      <!-- Content Area -->
+      <div class="p-6 flex flex-col gap-6">
+        <!-- Display Board -->
+        <div class="text-center flex flex-col gap-4">
+          <div class="flex flex-col items-center">
+            <span
+              class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200"
+              >▶ モノサシ</span
+            >
+            <div
+              id="theme-display"
+              class="text-2xl font-bold text-blue-700 mt-2 min-h-[3rem] w-full flex items-center justify-center"
+            >
+              Ready?
+            </div>
+          </div>
+
+          <div class="h-px bg-slate-200 w-full"></div>
+
+          <div class="flex flex-col items-center">
+            <span
+              class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200"
+              >▶ たねワード</span
+            >
+            <div
+              id="word-display"
+              class="text-2xl font-extrabold text-pink-600 mt-2 min-h-[6rem] w-full flex flex-col items-center justify-center leading-tight gap-1"
+            >
+              ？
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button
+          id="switch-btn"
+          class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-95 text-xl flex items-center justify-center gap-2"
+        >
+          モノサシを変える
+        </button>
+
+        <!-- Control Panel -->
+        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+          <!-- Timer Section -->
+          <div
+            class="flex items-center justify-between mb-5 border-b border-slate-200 pb-5"
+          >
+            <div class="flex items-center gap-2">
+              <button
+                id="timer-minus"
+                class="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-300 font-bold text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                >-</button
+              >
+              <div
+                id="timer-display"
+                class="text-3xl font-extrabold w-20 text-center tabular-nums text-slate-800"
+              >
+                05:00
+              </div>
+              <button
+                id="timer-plus"
+                class="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-300 font-bold text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                >+</button
+              >
+            </div>
+            <div class="flex gap-2">
+              <button
+                id="timer-start"
+                class="px-4 py-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-lg font-bold text-sm shadow-sm transition-colors"
+                >▶</button
+              >
+              <button
+                id="timer-stop"
+                class="px-4 py-2 bg-slate-400 hover:bg-slate-500 active:bg-slate-600 text-white rounded-lg font-bold text-sm shadow-sm transition-colors"
+                >■</button
+              >
+            </div>
+          </div>
+
+          <!-- Settings Section -->
+          <div class="flex flex-col gap-3">
+            <h3
+              class="text-xs font-bold text-slate-400 uppercase tracking-widest -mt-1"
+            >
+              Settings
+            </h3>
+            <label
+              class="flex justify-between items-center text-sm font-bold text-slate-700 cursor-pointer"
+            >
+              <span>ふつうのモノサシ</span>
+              <input
+                type="checkbox"
+                id="simple-toggle"
+                class="w-5 h-5 accent-blue-600 cursor-pointer"
+                checked
+              />
+            </label>
+            <label
+              class="flex justify-between items-center text-sm font-bold text-slate-700 cursor-pointer"
+            >
+              <span>変なモノサシ</span>
+              <input
+                type="checkbox"
+                id="quirky-toggle"
+                class="w-5 h-5 accent-blue-600 cursor-pointer"
+                checked
+              />
+            </label>
+            <p
+              id="warning-msg"
+              class="text-xs text-red-500 font-bold text-center mt-2 hidden"
+            >
+              ⚠️ カテゴリを選択してください
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="text-center pb-4">
+        <span class="text-[10px] text-slate-400 font-medium tracking-widest">
+          ©nanatengo
+        </span>
+      </div>
+    </main>
+  </body>
+
+  <!-- Rules Modal -->
+  <div
+    id="rules-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden transition-opacity duration-300"
+  >
+    <div
+      class="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm modal-container shadow-2xl overflow-hidden"
+    >
+      <h2
+        class="text-2xl font-extrabold text-blue-800 mb-4 text-center border-b-2 border-slate-100 pb-3"
+      >
+        ワドえらの遊び方
+      </h2>
+
+      <div class="modal-content space-y-5 text-sm text-slate-700 mb-6">
+        <div>
+          <strong class="text-blue-600 text-base block mb-1"
+            >1. 親を決める</strong
+          >
+          親はアプリのボタンを押し、「モノサシ（お題）」と「たねワード」を確認します。<br
+          />
+          モノサシに沿って、たねワードの中から「暫定王者ワード」を最初に伝えます。<br
+          />
+          <span class="text-red-500 font-bold text-xs"
+            >※モノサシは秘密にしてください！</span
+          >
+        </div>
+        <div>
+          <strong class="text-yellow-600 text-base block mb-1"
+            >2. 言葉をぶつける</strong
+          >
+          子は「暫定王者ワード」に勝てそうな言葉を順番に投げかけます。<br />
+          親はモノサシに基づき判定し、勝った方が新たな「暫定王者ワード」になります。
+        </div>
+        <div>
+          <strong class="text-pink-600 text-base block mb-1"
+            >3. 決着と発表</strong
+          >
+          タイマー終了で調査完了。最後に最強だと思う言葉を一斉に発表！<br />
+          親が最終的なチャンピオンを決定し、お題をネタバラシします。
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <strong class="text-slate-500 text-xs block mb-1">💡Tips</strong>
+          作者の偏見で「ふつう」と「変な」モノサシを分類しています。好きなモノサシを設定から変更してみてください。
+        </div>
+      </div>
+
+      <button
+        id="close-rules-btn"
+        class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-lg transition-colors shadow-lg active:scale-95"
+        >閉じる</button
+      >
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script define:vars={{ wordData }}>
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = (id) => document.getElementById(id);
+      const btn = el("switch-btn"),
+        themeDisplay = el("theme-display"),
+        wordDisplay = el("word-display");
+      const simpleToggle = el("simple-toggle"),
+        quirkyToggle = el("quirky-toggle"),
+        warningMsg = el("warning-msg");
+
+      let usedThemes = new Set();
+
+      // --- Timer Logic ---
+      let currentDur = 300,
+        remaining = 300,
+        timerInt = null,
+        isPaused = false;
+      const tDisp = el("timer-display");
+
+      const fTime = (s) =>
+        `${Math.floor(s / 60)
+          .toString()
+          .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+
+      const updateTime = (add) => {
+        if (timerInt) return;
+        currentDur = Math.max(30, Math.min(3600, currentDur + add));
+        remaining = currentDur;
+        tDisp.textContent = fTime(currentDur);
+        tDisp.classList.remove("text-red-500");
+        isPaused = false;
+      };
+
+      el("timer-plus")?.addEventListener("click", () => updateTime(30));
+      el("timer-minus")?.addEventListener("click", () => updateTime(-30));
+
+      el("timer-start")?.addEventListener("click", () => {
+        if (timerInt || remaining <= 0) return;
+        tDisp.classList.add("text-blue-600");
+        timerInt = setInterval(() => {
+          remaining--;
+          tDisp.textContent = fTime(remaining);
+          if (remaining <= 10) tDisp.classList.add("text-red-500");
+          if (remaining <= 0) {
+            clearInterval(timerInt);
+            timerInt = null;
+            tDisp.classList.remove("text-blue-600");
+          }
+        }, 1000);
+      });
+
+      el("timer-stop")?.addEventListener("click", () => {
+        if (timerInt) {
+          // Pause
+          clearInterval(timerInt);
+          timerInt = null;
+          isPaused = true;
+          tDisp.classList.remove("text-blue-600");
+        } else {
+          // Reset
+          remaining = currentDur;
+          tDisp.textContent = fTime(remaining);
+          tDisp.classList.remove("text-red-500");
+          isPaused = false;
+        }
+      });
+
+      // --- Modals Logic ---
+      const tMod = (id, show) => el(id).classList.toggle("hidden", !show);
+
+      el("rules-btn")?.addEventListener("click", () =>
+        tMod("rules-modal", true),
+      );
+      el("close-rules-btn")?.addEventListener("click", () =>
+        tMod("rules-modal", false),
+      );
+
+      const popHints = () => {
+        const c = el("hints-container");
+        if (!c) return;
+        c.innerHTML = [...wordData.words]
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 18)
+          .map(
+            (w) =>
+              `<span class="bg-white text-slate-700 px-3 py-1.5 rounded-full text-xs font-bold border-2 border-slate-100 shadow-sm text-center">${w.split("|").join("<br/>")}</span>`,
+          )
+          .join("");
+      };
+
+      el("hints-btn")?.addEventListener("click", () => {
+        popHints();
+        tMod("hints-modal", true);
+      });
+      el("close-hints-btn")?.addEventListener("click", () =>
+        tMod("hints-modal", false),
+      );
+      el("refresh-hints-btn")?.addEventListener("click", popHints);
+
+      // --- Game Logic ---
+      const chkState = () => {
+        const v = simpleToggle.checked || quirkyToggle.checked;
+        btn.disabled = !v;
+        btn.classList.toggle("opacity-50", !v);
+        warningMsg.classList.toggle("hidden", v);
+      };
+
+      simpleToggle?.addEventListener("change", chkState);
+      quirkyToggle?.addEventListener("change", chkState);
+
+      const rElem = (a) => a[Math.floor(Math.random() * a.length)];
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      const formatWord = (w) => {
+        if (!w) return "---";
+        return w
+          .split("|")
+          .map((s) => `<div>${s}</div>`)
+          .join("");
+      };
+
+      btn?.addEventListener("click", async () => {
+        if (btn.disabled) return;
+
+        let pool = [];
+        if (simpleToggle.checked)
+          pool = pool.concat(wordData.simpleThemes || []);
+        if (quirkyToggle.checked)
+          pool = pool.concat(wordData.quirkyThemes || []);
+
+        let avail = pool.filter((t) => !usedThemes.has(t));
+        if (avail.length === 0) {
+          themeDisplay.textContent = "お題終了";
+          wordDisplay.innerHTML = "<div>リセットしてね</div>";
+          return;
+        }
+
+        btn.disabled = true;
+
+        for (let i = 0; i < 10; i++) {
+          themeDisplay.textContent = rElem(avail) || "---";
+          wordDisplay.innerHTML = formatWord(rElem(wordData.words));
+          await sleep(50 + i * 10);
+        }
+
+        const fT = rElem(avail),
+          fW = rElem(wordData.words);
+        themeDisplay.textContent = fT;
+        wordDisplay.innerHTML = formatWord(fW);
+        usedThemes.add(fT);
+
+        btn.disabled = false;
+      });
+    });
+  </script>
+</html>
